@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculadora de Frete</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <script src="sw.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+    header { background: #1976d2; color: white; padding: 10px; text-align: center; }
+    #map { height: 400px; width: 100%; }
+    .container { padding: 10px; }
+    input, button { margin: 5px 0; padding: 10px; width: 100%; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Calculadora de Frete</h1>
+  </header>
+  <div class="container">
+    <label>Origem:</label>
+    <input id="origem" type="text" placeholder="Digite o local de origem">
+    <label>Destino:</label>
+    <input id="destino" type="text" placeholder="Digite o local de destino">
+    <button onclick="calcularRota()">Calcular Rota e Frete</button>
+    <p id="resultado"></p>
+  </div>
+  <div id="map"></div>
+
+  <script>
+    let map, directionsService, directionsRenderer;
+
+    function initMap() {
+      map = new google.maps.Map(document.getElementById("map"), {
+        zoom: 6,
+        center: { lat: -14.2350, lng: -51.9253 } // Brasil
+      });
+      directionsService = new google.maps.DirectionsService();
+      directionsRenderer = new google.maps.DirectionsRenderer();
+      directionsRenderer.setMap(map);
+    }
+
+    function calcularRota() {
+      const origem = document.getElementById("origem").value;
+      const destino = document.getElementById("destino").value;
+
+      directionsService.route(
+        {
+          origin: origem,
+          destination: destino,
+          travelMode: google.maps.TravelMode.DRIVING,
+        },
+        (response, status) => {
+          if (status === "OK") {
+            directionsRenderer.setDirections(response);
+
+            const distancia = response.routes[0].legs[0].distance.value / 1000; // km
+            const pedagio = distancia * 0.05; // simulação
+            const combustivel = distancia / 3 * 5.5; // consumo 3 km/l, preço 5.5 R$
+            const almoco = 30; // fixo
+            const total = combustivel + pedagio + almoco;
+
+            document.getElementById("resultado").innerText =
+              `Distância: ${distancia.toFixed(2)} km\n` +
+              `Combustível: R$ ${combustivel.toFixed(2)}\n` +
+              `Pedágio: R$ ${pedagio.toFixed(2)}\n` +
+              `Almoço: R$ ${almoco.toFixed(2)}\n` +
+              `TOTAL: R$ ${total.toFixed(2)}`;
+          } else {
+            alert("Erro ao calcular rota: " + status);
+          }
+        }
+      );
+    }
+  </script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=SUA_API_KEY&callback=initMap"></script>
+</body>
+</html>
